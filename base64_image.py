@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import base64
 import mimetypes
@@ -30,7 +31,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-i", action="store", dest="image")
-    group.add_argument("-d", action="store", dest="data", nargs=2, metavar=("DATAURI", "FILENAME"))
+    group.add_argument(
+        "-d", action="store", dest="data", nargs=2, metavar=("DATAURI", "FILENAME")
+    )
 
     args = parser.parse_args()
     if args.image:

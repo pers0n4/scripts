@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 import argparse
-import sys
 from functools import reduce
 from math import gcd
 
