@@ -4,7 +4,6 @@ import base64
 import mimetypes
 import re
 import urllib.request
-from io import BytesIO
 
 
 def image_to_base64(image, datauri=False):
