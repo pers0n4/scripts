@@ -1,4 +1,5 @@
 import * as colors from "https://deno.land/std/fmt/colors.ts";
+import { printf } from "https://deno.land/std/fmt/printf.ts";
 
 interface RGB {
   r: number;
@@ -6,11 +7,14 @@ interface RGB {
   b: number;
 }
 
-export const hex2rgb = (hex: string): RGB => {
-  hex = hex.replace(
+const rrggbb = (hex: string) =>
+  hex.replace(
     /^#?([a-f\d])([a-f\d])([a-f\d])$/i,
-    (_, r, g, b) => r + r + g + g + b + b,
+    (_, r, g, b) => "#" + r + r + g + g + b + b,
   );
+
+export const hex2rgb = (hex: string): RGB => {
+  hex = rrggbb(hex);
 
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) throw new Error();
@@ -46,31 +50,41 @@ export const contrast = (x: string, y: string) => {
 //      https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast
 const rules = {
   // Minimum
-  "AA": {
-    "normal": 4.5,
-    "larger": 3,
+  AA: {
+    larger: 3,
+    normal: 4.5,
   },
   // Enhanced
-  "AAA": {
-    "normal": 7,
-    "larger": 4.5,
+  AAA: {
+    larger: 4.5,
+    normal: 7,
   },
 };
 
-export const testColors = (foreground: string[], background: string[]) => {
-  for (const bg of background) {
-    for (const fg of foreground) {
-      const ratio = contrast(fg, bg);
-      const test = Object.entries(rules).flatMap(([level, values]) =>
-        Object.entries(values).map((
-          [key, value],
-        ) => (ratio > value ? colors.green("T") : colors.red("F")))
-      );
+const colorText = (fg: string, bg: string) =>
+  colors.bgRgb24(colors.rgb24(rrggbb(fg), hex2rgb(fg)), hex2rgb(bg));
 
-      console.log(
-        colors.bgRgb24(colors.rgb24(fg, hex2rgb(fg)), hex2rgb(bg)),
-        ...test,
-      );
+const combination = (
+  foreground: string[],
+  background: string[],
+): [string, number][][] =>
+  foreground.map((fg) =>
+    background.map((bg) => [colorText(fg, bg), contrast(fg, bg)])
+  );
+
+export const test = (foreground: string[], background: string[]) => {
+  const rule = Object.values(rules).flatMap((o) => Object.values(o));
+  for (const row of combination(foreground, background)) {
+    const col = row.map((
+      [text, ratio],
+    ) => [
+      text,
+      rule.map((r) => ratio > r ? colors.cyan("T") : colors.red("F")),
+    ]);
+
+    for (const [text, result] of col) {
+      printf("%s %s %s %s %s ", text, ...result);
     }
+    printf("\n");
   }
 };
